@@ -11,17 +11,17 @@ Authors: Xueyuan Cui, XXXX.
 
 Version: 3.8.17
 
-Required libraries include ``osgeo``, ```fiona```, shapely, pyproj, scipy, geopandas, sklearn, pyomo, etc.
+Required libraries include ``osgeo``, ``fiona``, ``shapely``, ``pyproj``, ``scipy``, ``geopandas``, ``sklearn``, ``pyomo``, etc.
 
-QGIS
+``[QGIS](https://qgis.org/)``
 
 Version: 3.36.3
 
-Plug-in: UMEP
+Plug-in: ``[UMEP](https://umep-docs.readthedocs.io/en/latest/index.html)``
 
 ## Experiments
 ### Data
-All the data for experiments can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1wB3OkMHw7XF4DA5wYUdxXeCu_GbcM-Cv?usp=sharing).
+All the data for experiments can be downloaded from [Google Drive](https://umep-docs.readthedocs.io/en/latest/index.html).
 
 ### Reproduction
 To reproduce the experiments of the proposed methods and comparisons for single-zone, 22-zone, and 90-zone buildings, please go to folders
