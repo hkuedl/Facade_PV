@@ -13,7 +13,7 @@ Version: 3.8.17
 
 Required libraries include ``osgeo``, ``fiona``, ``shapely``, ``pyproj``, ``scipy``, ``geopandas``, ``sklearn``, ``pyomo``, etc.
 
-``[QGIS](https://qgis.org/)``
+[QGIS](https://qgis.org/)
 
 Version: 3.36.3
 
