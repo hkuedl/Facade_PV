@@ -17,24 +17,20 @@ Required libraries include ``osgeo``, ``fiona``, ``shapely``, ``pyproj``, ``scip
 
 Version: 3.36.3
 
-Plug-in: ``[UMEP](https://umep-docs.readthedocs.io/en/latest/index.html)``
+Plug-in: [UMEP](https://umep-docs.readthedocs.io/en/latest/index.html)
 
-## Experiments
-### Data
-All the data for experiments can be downloaded from [Google Drive](https://umep-docs.readthedocs.io/en/latest/index.html).
+## Data
 
+
+## Codes
 ### Reproduction
-To reproduce the experiments of the proposed methods and comparisons for single-zone, 22-zone, and 90-zone buildings, please go to folders
+To reproduce the experiments of the proposed methods and generate the figures, please go to folders
 ```
-cd #Codes/Single-zone
-cd #Codes/22-zone
-cd #Codes/90-zone
+cd #Codes/Evaluation
+cd #Codes/Optimization
+cd #Codes/Figures
 ```
-respectively. The introduction on the running order and each file's function is explained in ```Readme.md``` in the folder.
-
-Note: There is NO multi-GPU/parallelling training in our codes. 
-
-The required models as the warm start of SMC are saved in ```#Results```.
+respectively. The introduction on the running order and each file's function is explained in ```Readme.md``` in the sub-folder in ``#Codes``.
 
 ## Citation
 ```
