@@ -1,11 +1,7 @@
 ## File description
 
-In each folder, please run all required files in the following order:
+The folder ```Evaluation``` contains all required codes to evaluate the power generation of facade photovoltaics, covering sampling & simulation, feature reading, and model output of regression.
 
-```_fit.py```: the codes are to train the ICNN model as the surrogate loss function.
+The folder ```Optimization``` contains all required codes to solve the multi-period planning problem to determine the installed capacity of facade photovoltaics in grid cells during each period.
 
-```_independ_train.py```: the codes are to train the LSTM and thermal dynamics model following the traditional MPC and solve the optimization results.
-
-```_joint_train.py```: the codes are to reproduce the proposed SMC strategy by taking the pre-trained models as the warm start.
-
-```DF_Model_Func.py```: all required functions to be cited in other files.
+The folder ```Figures``` contains all required codes to generate figures in the manuscript.
