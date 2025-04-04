@@ -7,9 +7,9 @@ Codes for submitted paper "Mitigating Carbon Emissions in China’s Large Cities
 Authors: Xueyuan Cui, XXXX.
 
 ## Requirements
-Python version: 3.8.17
-
-Required libraries include ``osgeo``
+Python
+version: 3.8.17
+Required libraries include ``osgeo``, fiona
 
 ## Experiments
 ### Data
