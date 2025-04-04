@@ -4,7 +4,7 @@ _This work conducts a comprehensive study on harnessing the carbon mitigation po
 
 Codes for submitted paper "Mitigating Carbon Emissions in China’s Large Cities with Facade Photovoltaics".
 
-Authors: Xueyuan Cui, XXXX.
+Authors: Xueyuan Cui, Hao Li, Zeyang Long, Xiaochen Liu, Yi Wang.
 
 ## Requirements
 [Python](https://www.python.org/)
