@@ -7,7 +7,7 @@ Codes for submitted paper "Mitigating Carbon Emissions in China’s Large Cities
 Authors: Xueyuan Cui, XXXX.
 
 ## Requirements
-``Python``
+[Python](https://www.python.org/)
 
 Version: 3.8.17
 
