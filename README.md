@@ -35,7 +35,11 @@ cd #Codes/Evaluation
 cd #Codes/Optimization
 cd #Codes/Figures
 ```
-respectively. The introduction on the running order and each file's function is explained in ```Readme.md``` in the sub-folder in ``#Codes``.
+respectively.
+
+The ``Evaluation`` folder covers the procedure for solar irradiance simulation and power generation potential in the study, and the ``Optimization`` folder covers the procedure of the optimal deployment model for FPV's development pathway. The ``Figures`` folder includes the codes for generating the figures in the manuscript.
+
+The introduction on the running order and each file's function is explained in ```Readme.md``` in the sub-folder in ``#Codes``.
 
 ## Citation
 ```
