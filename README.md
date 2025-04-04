@@ -21,6 +21,7 @@ Plug-in: [UMEP](https://umep-docs.readthedocs.io/en/latest/index.html)
 
 ## Data
 
+Sources of required data and outputs of the study are public open in [BaiduDisk](https://pan.baidu.com/s/1nz6OqH5hKpRSR72fxIoMdQ?pwd=jx8f) (Code: jx8f)
 
 ## Codes
 ### Reproduction
