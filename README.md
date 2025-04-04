@@ -1,19 +1,15 @@
 # Facade_PV
-Codes for Paper "Mitigating Carbon Emissions in China’s Large Cities with Facade Photovoltaics".
 
 _This work conducts a comprehensive study on harnessing the carbon mitigation potential of facade photovoltaics (FPV). We select 102 large cities in China for study. We first reveal the high power generation potential of FPV compared with rooftop photovoltaics (RPV), then we determine the cost-effective deployment pathway for FPV in 2030-2050._
 
-Codes for submitted Paper "A Smart Model-then-Control Strategy for the Scheduling of Thermostatically Controlled Loads".
+Codes for submitted paper "Mitigating Carbon Emissions in China’s Large Cities with Facade Photovoltaics".
 
-Authors: Xueyuan Cui, Boyuan Liu, Yehui Li, and Yi Wang.
+Authors: Xueyuan Cui, XXXX.
 
 ## Requirements
 Python version: 3.8.17
 
-The must-have packages can be installed by running
-```
-pip install requirements.txt
-```
+Required libraries include ``osgeo``
 
 ## Experiments
 ### Data
