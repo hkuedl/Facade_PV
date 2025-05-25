@@ -1,8 +1,8 @@
 # Facade_PV
 
-_This work conducts a comprehensive study on harnessing the carbon mitigation potential of facade photovoltaics (FPV). We select 102 large cities in China for the study. We first reveal the high power generation potential of FPV compared with rooftop photovoltaics (RPV), and then we determine the cost-effective deployment pathway for FPV in 2030-2050._
+_This work conducts a comprehensive study on harnessing the carbon mitigation potential of facade photovoltaics (FPV). We select 102 large-sized cities in China for the study. We first reveal the high power generation potential of FPV compared with rooftop photovoltaics (RPV), and then we determine the cost-effective deployment pathway for FPV in 2030-2050._
 
-Codes for submitted paper "Mitigating Carbon Emissions in China’s Large Cities with Facade Photovoltaics".
+Codes for submitted paper "Mitigating Carbon Emissions in China’s Large-sized Cities with Facade Photovoltaics".
 
 Authors: Xueyuan Cui, Hao Li, Zeyang Long, Xiaochen Liu, Yi Wang.
 
@@ -63,9 +63,9 @@ It includes all other required data information for the optimization problem, in
 
 All data in 2.1-2.3 serve as the input for the optimization problem when running the code of ```#Codes/Optimization/Multi_period_planning.py```;
 
-_2.4 Fig_2_3_data_
+_2.4 Fig_input_data_
 
-It includes all the required data to generate Figures 2-3 in the manuscript, and the corresponding codes are in ```#Codes/Figures/Fig_2(3).ipynb```.
+It includes all the required data to generate Figures in the main text and the supplementary of the manuscript, and the corresponding codes are in ```#Codes/Figures```.
 
 ## Codes
 ### Reproduction
