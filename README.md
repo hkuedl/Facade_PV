@@ -17,7 +17,7 @@ Required libraries include ``osgeo``, ``fiona``, ``shapely``, ``pyproj``, ``scip
 
 Version: 3.36.3
 
-Plugin: [UMEP](https://umep-docs.readthedocs.io/en/latest/index.html)
+Required plugin for solar radiation simulation: [UMEP](https://umep-docs.readthedocs.io/en/latest/index.html)
 
 ## Data input
 
