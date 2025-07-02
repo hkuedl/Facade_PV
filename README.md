@@ -19,7 +19,7 @@ Version: 3.36.3
 
 Plugin: [UMEP](https://umep-docs.readthedocs.io/en/latest/index.html)
 
-## Data
+## Data input
 
 Sources of required data and outputs of the study are publicly available in [Baidu Netdisk](https://pan.baidu.com/s/1nz6OqH5hKpRSR72fxIoMdQ?pwd=jx8f) (Code: jx8f)
 
@@ -66,6 +66,12 @@ All data in 2.1-2.3 serve as the input for the optimization problem when running
 _2.4 Fig_input_data_
 
 It includes all the required data to generate Figures in the main text and the supplementary of the manuscript, and the corresponding codes are in ```#Codes/Figures```.
+
+## Data output
+
+The results of the work are presented in our developed website [link](https://city-photovoltaics.com/).
+
+The results are presented in ~2km*2km grid cells of all studied cities. They include the evaluated power generations, capacities, and carbon mitigation potential of facade and rooftop PVs, and include the deployment capacities of facade and rooftop PVs during 2030-2050, with a 5-year interval.
 
 ## Codes
 ### Reproduction
