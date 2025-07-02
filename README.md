@@ -67,7 +67,7 @@ It includes all the required data to generate Figures in the main text and the s
 
 ## Data output
 
-The results of the work are presented in our developed website [link](https://city-photovoltaics.com/).
+The results of the work are presented in our developed website: [link](https://city-photovoltaics.com/).
 
 The results are presented in ~2km*2km grid cells of all studied cities. They include the evaluated power generations, capacities, and carbon mitigation potential of facade and rooftop PVs, and include the deployment capacities of facade and rooftop PVs during 2030-2050, with a 5-year interval.
 
