@@ -23,9 +23,7 @@ Required plugin for solar radiation simulation: [UMEP](https://umep-docs.readthe
 
 Sources of required data and outputs of the study are publicly available in [Baidu Netdisk](https://pan.baidu.com/s/1nz6OqH5hKpRSR72fxIoMdQ?pwd=jx8f) (Code: jx8f)
 
-### Introduction
-
-_1. Evaluation_
+### Data for evaluation
 
 _1.1 UMEP_input_
 
@@ -47,7 +45,7 @@ _1.5 All_output_
 
 It includes all the output data that are extrapolated by the trained model. A more detailed introduction of each type of data is presented in ```#Introduction.txt``` in the folder.
 
-_2. Optimization_
+### Data for optimization
 
 _2.1 Electricity_price_
 
