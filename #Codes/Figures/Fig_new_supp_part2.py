@@ -4,13 +4,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Functions
 from scipy.io import savemat,loadmat
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 
-###2025为起点，2030-2050
-#30,35,40,45,50
-path = '#ML_results/'
+path = ''
 city_path = 'ALL_102_cities/'
-path_type = '#ML_results/Power'
-path_cap = '#ML_results/Capacity'
+path_type = 'Power'
+path_cap = 'Capacity'
 
 City_statistic = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Class_Volume', index_col=0)
 Statis_all = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
@@ -36,7 +40,7 @@ for cc in range(102):  #[3,15,56,59]:
     print(city_name)
     C1 = path_cap+'/Cap_facade_'+city_name+'.npy'
     C2 = path_cap+'/Cap_roof_'+city_name+'.npy'
-    G_type = np.load('#ML_results/Grid_type/'+'Grid_type_'+city_name+'.npy')
+    G_type = np.load('Grid_type/'+'Grid_type_'+city_name+'.npy')
     Feas_read_sta = np.load(city_path+city_name+'_ALL_Featuers.npy')[:,[i for i in range(14)]+[15,16]]
     indices_non_zero = np.where(Feas_read_sta[:,11] != 0)[0]
     WWR = np.load(city_path+city_name+'_ALL_Featuers.npy')[indices_non_zero,13:14]
@@ -75,8 +79,8 @@ for cc in range(102):  #[3,15,56,59]:
     Total_price_00_true[cc,:,:] = np.sum(R_Cost_true[:,:,:],axis = 0)
     wall_0 = [3.18]+[2.98,2.75,2.70,2.65,2.60]
     win_0 = [4.80]+[4.50,4.15,4.08,4.00,3.92]
-    K1_pri_wall = [1e3*wall_0[i] for i in range(6)]  #屋顶价格，单位CNY/KW
-    K1_pri_win  = [1e3*win_0[i] for i in range(6)]  #立面价格，单位CNY/KW
+    K1_pri_wall = [1e3*wall_0[i] for i in range(6)]  
+    K1_pri_win  = [1e3*win_0[i] for i in range(6)]
     year_op = 25
     K3_D_fa_id = [np.zeros((len(N_gg),12,24)) for _ in range(5)]
     for case in range(5):
@@ -107,7 +111,7 @@ for i in range(4):
         i_loc = Statis_all.index.get_loc(index)
         list_all_city_order[i_loc,2] = 4-i
         list_all_city_order[i_loc,1] = Total_Cap_total[i_loc,0,-1]/1e6
-sorted_indices = np.lexsort((-list_all_city_order[:, 1], -list_all_city_order[:, 2]))  # 注意负号实现降序
+sorted_indices = np.lexsort((-list_all_city_order[:, 1], -list_all_city_order[:, 2]))
 data_sorted = list_all_city_order[sorted_indices]
 list_all_city_j = list(data_sorted[:,0].astype(int))
 list_all_city_ii = [list_all_city_j[:7],list_all_city_j[7:22],list_all_city_j[22:35],list_all_city_j[35:]]
@@ -252,11 +256,11 @@ import matplotlib.patches as mpatches
 lg = fig.legend(
     handles=[
         mpatches.Patch(fc = 'green', label='Planned capacity'),
-        mpatches.Patch(fc = 'lightgreen', label='Ideal capacity'),
+        mpatches.Patch(fc = 'lightgreen', label='Assessed capacity'),
         plt.Line2D([0], [0], marker='o', color='blue',
                    markersize=37, label='Planned LCOE', linestyle='none'),
         plt.Line2D([0], [0], marker='o', color='lightblue',
-                   markersize=37, label='Ideal LCOE', linestyle='none')
+                   markersize=37, label='Assessed LCOE', linestyle='none')
     ],
     handleheight=0.7,
     handlelength=2,
@@ -405,11 +409,18 @@ import numpy as np
 from matplotlib.patches import Patch
 from geopy.distance import geodesic
 from scipy.io import savemat,loadmat
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 
-path = '#ML_results/'
+
+path = ''
 city_path = 'ALL_102_cities/'
-path_type = '#ML_results/Power'
-path_cap = '#ML_results/Capacity'
+path_type = 'Power'
+path_cap = 'Capacity'
 
 City_statistic = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Class_Volume', index_col=0)
 Statis_all = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
@@ -510,8 +521,8 @@ for cc in [3,74,59]:
                 x1,y1 = 0.5,30
             ax1.set_xlim(0,x1)
             ax1.set_ylim(0,y1)
-            ax1.xaxis.set_tick_params(labelsize=s_font-2)  # x轴刻度字体
-            ax1.yaxis.set_tick_params(labelsize=s_font-2)  # y轴刻度字体
+            ax1.xaxis.set_tick_params(labelsize=s_font-2)
+            ax1.yaxis.set_tick_params(labelsize=s_font-2)
 
     fig.suptitle(city_name, 
                 fontsize=s_font, 
@@ -626,8 +637,8 @@ for cc in [3,74,59]:
     ax.set_title(city_name+' (RS)',fontsize = s_font,weight='bold',y=0.9)
     ax.xaxis.set_tick_params(labelsize=s_font-2)
     ax.yaxis.set_tick_params(labelsize=s_font-2)
-    fig.savefig('Figs_new_supp/sFig5_zone_total_capa_RS_'+city_name+'.pdf', format='pdf', dpi=600, bbox_inches='tight')
-    fig.savefig('Figs_new_supp/sFig5_zone_total_capa_RS_'+city_name+'.png', dpi=600, bbox_inches='tight')
+    fig.savefig('Figs_new_supp/sFig5_zone_total_carbon_RS_'+city_name+'.pdf', format='pdf', dpi=600, bbox_inches='tight')
+    fig.savefig('Figs_new_supp/sFig5_zone_total_carbon_RS_'+city_name+'.png', dpi=600, bbox_inches='tight')
     plt.show()
 
     print((np.cumsum(Cap_car_ori, axis=1)[1,-1]-np.cumsum(Cap_car, axis=1)[1,-1])/np.cumsum(Cap_car_ori, axis=1)[1,-1])
@@ -655,8 +666,8 @@ for cc in [3,74,59]:
     ax.set_title(city_name+' (RS+F)',fontsize = s_font,weight='bold',y=0.9)
     ax.xaxis.set_tick_params(labelsize=s_font-2)
     ax.yaxis.set_tick_params(labelsize=s_font-2)
-    fig.savefig('Figs_new_supp/sFig5_zone_total_capa_RSF_'+city_name+'.pdf', format='pdf', dpi=600, bbox_inches='tight')
-    fig.savefig('Figs_new_supp/sFig5_zone_total_capa_RSF_'+city_name+'.png', dpi=600, bbox_inches='tight')
+    fig.savefig('Figs_new_supp/sFig5_zone_total_carbon_RSF_'+city_name+'.pdf', format='pdf', dpi=600, bbox_inches='tight')
+    fig.savefig('Figs_new_supp/sFig5_zone_total_carbon_RSF_'+city_name+'.png', dpi=600, bbox_inches='tight')
     plt.show()
 
     ###### Unit_Capa
@@ -670,7 +681,7 @@ for cc in [3,74,59]:
     group_spacing = 2
     for i in range(stages):
         positions.extend([i * group_spacing + j * 0.2 for j in range(cities)])
-    plt.figure(figsize=(12, 6))
+    fig = plt.figure(figsize=(12, 6))
     box = plt.boxplot(flattened_data, positions=positions, patch_artist=True, widths=0.15)
     colors = [ 'Blue', 'Orange', 'Green', 'Purple']
     for i, box in enumerate(box['boxes']):
@@ -701,7 +712,7 @@ for cc in [3,74,59]:
     group_spacing = 2
     for i in range(stages):
         positions.extend([i * group_spacing + j * 0.2 for j in range(cities)])
-    plt.figure(figsize=(12, 6))
+    fig = plt.figure(figsize=(12, 6))
     box = plt.boxplot(flattened_data, positions=positions, patch_artist=True, widths=0.15)
     colors = [ 'Blue', 'Orange', 'Green', 'Purple']
     for i, box in enumerate(box['boxes']):
@@ -741,7 +752,7 @@ for cc in [3,74,59]:
     group_spacing = 2
     for i in range(stages):
         positions.extend([i * group_spacing + j * 0.2 for j in range(cities)])
-    plt.figure(figsize=(12, 6))
+    fig = plt.figure(figsize=(12, 6))
     box = plt.boxplot(flattened_data, positions=positions, patch_artist=True, widths=0.15)
     colors = [ 'Blue', 'Orange', 'Green', 'Purple']
     for i, box in enumerate(box['boxes']):
@@ -772,7 +783,7 @@ for cc in [3,74,59]:
     group_spacing = 2
     for i in range(stages):
         positions.extend([i * group_spacing + j * 0.2 for j in range(cities)])
-    plt.figure(figsize=(12, 6))
+    fig = plt.figure(figsize=(12, 6))
     box = plt.boxplot(flattened_data, positions=positions, patch_artist=True, widths=0.15)
     colors = [ 'Blue', 'Orange', 'Green', 'Purple']
     for i, box in enumerate(box['boxes']):
@@ -790,3 +801,10 @@ for cc in [3,74,59]:
     fig.savefig('Figs_new_supp/sFig5_zone_unit_carbon_RSF_'+city_name+'.pdf', format='pdf', dpi=600, bbox_inches='tight')
     fig.savefig('Figs_new_supp/sFig5_zone_unit_carbon_RSF_'+city_name+'.png', dpi=600, bbox_inches='tight')
     plt.show()
+
+
+
+#%%
+
+
+

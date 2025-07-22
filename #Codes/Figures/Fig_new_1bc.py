@@ -4,6 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.colors as mcolors
 from matplotlib.colors import ListedColormap
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 
 ratio_plot = 3
 
@@ -123,18 +129,35 @@ df_plot['facade_roof_ratio_generation'] = df_plot['facade_power'] / df_plot['roo
 
 import Functions
 Carbon_evaluation = np.zeros((102, 1))
+Carbon_xy = np.zeros((102, 3))
 df_plot['facade_carbon'] = facade_power
 for i in range(len(df_plot)):
     city_name = df_plot.index[i]
     _,K3_TOU_indu_i,K3_TOU_resi_i,K3_net_i,Carbon_F = Functions.TOU_period(city_name)
     df_plot.iloc[i,-1] = facade_power[i]*Carbon_F   #Million ton
     Carbon_evaluation[i,0] = Carbon_F*facade_power[i]
+    Carbon_xy[i,-1] = Carbon_F*facade_power[i]
+    Carbon_xy[i,:2] = cities_hku_dest.loc[i, ['HKU_LONGITUDE', 'HKU_LATITUDE']].values
 
 df_plot = df_plot.merge(city_adcode_df, left_index=True, right_index=True, how='left')
 
 df_plot['city_adcode'] = df_plot['city_adcode'].astype(int)
 
 df_plot
+
+
+df_plot_level = area_df.iloc[:, :2].copy()
+
+# Merge population data and solar radiation data
+df_plot_level = df_plot_level.merge(population_df, left_index=True, right_index=True)
+df_plot_level = df_plot_level.merge(solar_df, left_index=True, right_index=True)
+
+# Sort by urban population in ascending order within each city level
+df_plot_level[['城区人口', '常住人口', '城镇化率']] = df_plot_level[['城区人口', '常住人口', '城镇化率']].astype(float)
+# df_plot_level.sort_values(['city_level', '城区人口'], ascending=True, inplace=True)
+# # Add 'city_adcode' column
+df_plot_level = df_plot_level.merge(city_adcode_df, left_index=True, right_index=True, how='left')
+df_plot_level['city_adcode'] = df_plot_level['city_adcode'].astype(int)
 
 import geopandas as gpd
 import pyproj
@@ -154,7 +177,7 @@ aeqd_crs = pyproj.CRS.from_proj4(proj_aeqd)
 taiwan_aeqd = taiwan.to_crs(aeqd_crs)
 
 
-#%
+#%%
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 
@@ -164,9 +187,14 @@ import frykit.shp as fshp
 # Parameter settings
 col_plot = "facade_carbon"
 
-cmap = plt.get_cmap('YlGnBu')
-bad_color = '#E1E1E1'
+cmap = plt.get_cmap('YlGn')
+bad_color = "#FDFCFC"
 cmap.set_bad(bad_color)
+
+n_levels = df_plot_level['city_level'].nunique()
+norm_level = plt.Normalize(vmin=-0.5, vmax=n_levels - 0.5)
+colors_level = ["#D8D4D4", "#969393", "#5F5D5D", "#222121"]
+cmap_popula = ListedColormap(colors_level)
 
 lw_cn_map = lw * 0.1
 lw_axis = lw * 0.5
@@ -174,10 +202,14 @@ lw_axis = lw * 0.5
 # Data preparation
 city_table = fshp.get_cn_city_table(data_source='tianditu')  # Retrieve city boundary metadata
 city_table_with_values = city_table.merge(df_plot, left_on='city_adcode', right_on='city_adcode', how='left')  # Merge by city_adcode
-
 city_adcode = city_table_with_values['city_adcode'].astype(int)
 cities = fshp.get_cn_city(city_adcode, data_source='tianditu')
 data = city_table_with_values[col_plot]
+
+city_table_with_values_level = city_table.merge(df_plot_level, left_on='city_adcode', right_on='city_adcode', how='left')  # Merge by city_adcode
+# city_adcode_level = city_table_with_values_level['city_adcode'].astype(int)
+# cities_level = fshp.get_cn_city(city_adcode_level, data_source='tianditu')
+data_level = city_table_with_values_level['city_level']
 
 vmin, vmax = np.floor(data.min() * 1) / 1, np.ceil(data.max() * 1) / 1
 norm = plt.Normalize(vmin=vmin, vmax=vmax)
@@ -190,8 +222,6 @@ data_crs = fplt.PLATE_CARREE
 xticks = np.arange(-180, 181, 10)
 yticks = np.arange(-90, 91, 10)
 
-# Prepare main map
-#font_options = {'family': 'Arial', 'size': fs}
 font_options = {'size': fs}
 plt.rc('font', **font_options)
 
@@ -199,8 +229,8 @@ fig = plt.figure(figsize=np.array([figwidth * 2/3, figwidth * 2/3 * 0.7]) / 2.5)
 main_ax = fig.add_subplot(projection=map_crs)
 
 fplt.set_map_ticks(main_ax, (74, 136, 17, 55), xticks, yticks)
-main_ax.gridlines(xlocs=xticks, ylocs=yticks, lw=0.5, ls='--', color='gray')
-main_ax.set_adjustable('datalim')  # Adjust xlim and ylim to fit data
+main_ax.gridlines(xlocs=xticks, ylocs=yticks, lw=0.1, ls='--', color='gray')
+main_ax.set_adjustable('datalim')
 main_ax.tick_params(axis='x', labelsize=10)  
 main_ax.tick_params(axis='y', labelsize=10)  
 #main_ax.set_xticks([])
@@ -211,33 +241,71 @@ main_ax.tick_params(axis='y', labelsize=10)
 mini_ax = fplt.add_mini_axes(main_ax, shrink=0.35)
 mini_ax.spines[:].set_linewidth(lw_axis)
 mini_ax.set_extent((105, 122, 2, 25), data_crs)
-mini_ax.gridlines(xlocs=xticks, ylocs=yticks, lw=0.5, ls='--', color='gray')
+mini_ax.gridlines(xlocs=xticks, ylocs=yticks, lw=0.1, ls='--', color='gray')
 
 
 # Add map features
 for ax in [main_ax, mini_ax]:
     fplt.add_cn_border(ax, lw=lw_cn_map, fc='none', zorder=-10)
-    fplt.add_cn_line(ax, lw=lw_cn_map)
+    fplt.add_cn_line(ax, lw=lw_cn_map+1)
 
-# Draw filled polygons
 for ax in [main_ax, mini_ax]:
     fplt.add_geometries(
-        ax, cities, array=data,
-        cmap=cmap, norm=norm,
+        ax, cities, array=data_level,
+        cmap=cmap_popula, norm=norm_level,
         ec='black', lw=lw_cn_map,
     )
     taiwan_aeqd.plot(
         ax=ax, color='none', edgecolor='black',
         linewidth=lw_cn_map,
-        )
+    )
+    for ik in range(102):
+        lon, lat = Carbon_xy[ik, 0], Carbon_xy[ik, 1]
+        normal_car = (Carbon_xy[ik,2]-min(Carbon_xy[:,2]))/(max(Carbon_xy[:,2])-min(Carbon_xy[:,2]))
+        ax.scatter(lon,lat,s=30, marker='o', color=cmap(normal_car),transform=data_crs)
 
-# Set title
+main_ax.plot([Carbon_xy[3,0],Carbon_xy[3,0]+10],[Carbon_xy[3,1],Carbon_xy[3,1]],color='black', lw=lw_axis,linestyle = '--',transform=data_crs)
+main_ax.text(Carbon_xy[3,0]+11, Carbon_xy[3,1]-1,'Beijing (SLC)\n   '+str(round(Carbon_xy[3,2],1))+'MT',fontsize = fs-15,color='black', transform=data_crs)
+
+main_ax.plot([Carbon_xy[52,0],Carbon_xy[52,0]+6],[Carbon_xy[52,1],Carbon_xy[52,1]-4],color='black', lw=lw_axis,linestyle = '--',transform=data_crs)
+main_ax.text(Carbon_xy[52,0]+7, Carbon_xy[52,1]-5,'Qingdao (VLC)\n    '+str(round(Carbon_xy[52,2],1))+'MT',fontsize = fs-15,color='black', transform=data_crs)
+
+main_ax.plot([Carbon_xy[68,0],Carbon_xy[68,0]+9],[Carbon_xy[68,1],Carbon_xy[68,1]-3],color='black', lw=lw_axis,linestyle = '--',transform=data_crs)
+main_ax.text(Carbon_xy[68,0]+10, Carbon_xy[68,1]-4,'Tianjin (SLC)\n    '+str(round(Carbon_xy[68,2],1))+'MT',fontsize = fs-15,color='black', transform=data_crs)
+
+# main_ax.plot([Carbon_xy[95,0],Carbon_xy[95,0]+14],[Carbon_xy[95,1],Carbon_xy[95,1]-3],color='black', lw=lw_axis,linestyle = '--',transform=data_crs)
+# main_ax.text(Carbon_xy[95,0]+14.5, Carbon_xy[95,1]-4,'Zhengzhou (VLC)\n      '+str(round(Carbon_xy[95,2],1))+'MT',fontsize = fs-15,color='black', transform=data_crs)
+
+
+
+main_ax.text(-0.04,1.03,'b',transform=main_ax.transAxes, fontsize=fs, fontweight='bold', va='top', ha='right')
+
 main_ax.set_title(
-    'Annual carbon mitigation potential of FPV',
-    y=0.92,
-    fontsize=fs-9,
+    'Nationwide carbon mitigation potential',
+    y=0.93,
+    fontsize=fs-8,
     weight='normal',
     fontweight='bold'
+)
+# Add legend
+import matplotlib.patches as mpatches
+labels_level = ['1-3 (LC-II)', '3-5 (LC-I)', '5-10 (VLC)', '>10 (SLC)']
+patches = []
+for color, label in zip(colors_level, labels_level):
+    patch = mpatches.Patch(fc=color, ec='k',
+            lw=lw_axis, label=label)
+    patches.append(patch)
+main_ax.legend(
+    handles=patches[::-1],
+    loc=(-0.0, -0.0),
+    frameon=False,
+    handleheight=0.7,      # Default is 0.7
+    handlelength=1.5,      # Default is 2
+    fontsize=fs-13,
+    title='Population\n  (Million)',
+    title_fontsize=fs-13,
+    labelspacing=0.3,      # Vertical spacing between legend entries
+    handletextpad=0.5,     # Space between handle and text
 )
 
 
@@ -245,45 +313,45 @@ main_ax.set_title(
 # Main colorbar
 sm = ScalarMappable(cmap=cmap, norm=norm)
 sm._A = []
-cax = fig.add_axes([0.08 + 0.06, 0.12, 0.25, 0.03])  # Add space on the left for NaN block
-cbar = plt.colorbar(sm, cax=cax, orientation='horizontal')
+#cax = fig.add_axes([0.08 + 0.06, 0.12, 0.25, 0.03])  # Add space on the left for NaN block
+cax = fig.add_axes([0.26, 0.06, 0.03, 0.14])
+cbar = plt.colorbar(sm, cax=cax, orientation='vertical')
 cbar.set_ticks(np.linspace(vmin, vmax, 2))
-cbar.ax.tick_params(labelsize=fs - 9)
+cbar.ax.tick_params(labelsize=fs - 13)
 cbar.outline.set_visible(True)
 cbar.outline.set_linewidth(lw_axis)
 
 # Align tick labels: left-aligned for min, right-aligned for max
-tick_labels = cbar.ax.get_xticklabels()
-tick_labels[0].set_horizontalalignment('left')
-tick_labels[-1].set_horizontalalignment('right')
+tick_labels = cbar.ax.get_yticklabels()
+tick_labels[0].set_verticalalignment('bottom')
+tick_labels[-1].set_verticalalignment('top')
 
 # Add NaN color block (gray)
-na_cax = fig.add_axes([0.08, 0.12, 0.045, 0.03])  # Position of mini colorbar
-na_cax.set_facecolor(bad_color)
-na_cax.set_xticks([])
-na_cax.set_yticks([])
-na_cax.spines[:].set_linewidth(lw_axis)
-na_cax.text(0.5, -1.3, 'N/A', ha='center', va='center', fontsize=fs - 9, transform=na_cax.transAxes)
+# na_cax = fig.add_axes([0.08, 0.12, 0.045, 0.03])  # Position of mini colorbar
+# na_cax.set_facecolor(bad_color)
+# na_cax.set_xticks([])
+# na_cax.set_yticks([])
+# na_cax.spines[:].set_linewidth(lw_axis)
+# na_cax.text(0.5, -1.3, 'N/A', ha='center', va='center', fontsize=fs - 9, transform=na_cax.transAxes)
 
 # Add unit label
 main_ax.text(
-    0.08, 0.12 + 0.03 + 0.01,  # Position: just above the NaN block
-    '(Million ton)',                   # Annotation text
+    0.19, 0.21,  # Position: just above the NaN block
+    'Carbon mitigation\n   (Million ton)',                   # Annotation text
     transform=fig.transFigure,
-    ha='left', va='bottom', fontsize=fs - 8
+    ha='left', va='bottom', fontsize=fs-13
 )
 
 # Adjust layout
 plt.subplots_adjust(left=0.04, right=0.96, bottom=0.04, top=0.96)
-#plt.tight_layout(rect=[0, 0, 0.9, 0.9])  # rect参数控制图形范围（左, 下, 右, 上）
+#plt.tight_layout(rect=[0, 0, 0.9, 0.9])
 fig.savefig('Figs_new/Fig1b_left.pdf',format='pdf',dpi=600,bbox_inches='tight')
 fig.savefig("Figs_new/Fig1b_left.png", dpi=600,bbox_inches='tight')
 plt.show()
 
+#%%
 
-#%
-
-path = '#ML_results/'
+path = ''
 Statis_all = pd.read_excel(path+'/City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
 
 City_SLC_list = []
@@ -308,15 +376,23 @@ for index in indices3:
 
 data_list = [Carbon_evaluation[City_SLC_list,0],Carbon_evaluation[City_VLC_list,0],Carbon_evaluation[City_LCI_list,0],Carbon_evaluation[City_LCII_list,0]]
 
-fig = plt.figure(figsize=(8, 8))
+fig = plt.figure(figsize=(8, 9))
 
-plt.title("Annual carbon mitigation potential of FPV", fontsize=fs-6, y=0.94, fontweight='bold')
+plt.title("Carbon mitigation in different city types", fontsize=fs, y=0.94, fontweight='bold')
 
 plt.ylim(0, 40)
-plt.boxplot(data_list, widths=0.4, patch_artist=True, boxprops=dict(facecolor='mediumseagreen'), tick_labels=[""] * 4, showfliers = False)
+plt.boxplot(data_list, widths=0.5, patch_artist=True, boxprops=dict(facecolor='mediumseagreen', alpha = 0.7), tick_labels=[""] * 4, showfliers = True)
 plt.grid(axis="y", linestyle="--", alpha=1)
 plt.xlabel("")
 plt.ylabel("Million ton")
+
+for i, data in enumerate(data_list):
+    x = np.random.normal(i+1, 0.0, size=len(data))
+    plt.scatter(x, data, color='grey', alpha=1, s=20)
+    mean_val = np.mean(data)
+    plt.scatter(i+1, mean_val, marker='*', s=200, color='blue', edgecolor='black', zorder=10)
+    plt.text(i+1.1, mean_val, f'{mean_val:.2f}', ha='left', va='center', fontsize=fs-5,color = 'blue')
+
 plt.xticks(ticks=np.arange(1,5), labels=['SLC','VLC','LC-I','LC-II'])
 plt.tick_params(axis='y', labelsize=fs-5)
 plt.tight_layout()
@@ -326,12 +402,13 @@ fig.savefig("Figs_new/Fig1b_right.png", dpi=600,bbox_inches='tight')
 plt.show()
 
 
+#%%
 from scipy.io import savemat,loadmat
 
-path = '#ML_results/'
+path = ''
 city_path = 'ALL_102_cities/'
-path_type = '#ML_results/Power'
-path_cap = '#ML_results/Capacity'
+path_type = 'Power'
+path_cap = 'Capacity'
 City_statistic = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Class_Volume', index_col=0)
 Statis_all = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
 
@@ -350,13 +427,20 @@ Total_price_00_true = np.zeros((102,2,5))
 
 Total_area = np.zeros((102,1))
 
-for cc in range(102):  #[3,15,56,59]:
+Statis_all = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
+
+City_mega_list = []
+indices = Statis_all.index[Statis_all.iloc[:,-1] == ['超大城市','特大城市','I型大城市','II型大城市'][0]]
+for index in indices:
+    City_mega_list.append(Statis_all.index.get_loc(index))
+
+for cc in City_mega_list:  #range(102):  #[3,15,56,59]:
     city_name = City_statistic.index[cc]
     print(city_name)
     C1 = path_cap+'/Cap_facade_'+city_name+'.npy'
     C2 = path_cap+'/Cap_roof_'+city_name+'.npy'
 
-    G_type = np.load('#ML_results/Grid_type/'+'Grid_type_'+city_name+'.npy')
+    G_type = np.load('Grid_type/'+'Grid_type_'+city_name+'.npy')
     Feas_read_sta = np.load(city_path+city_name+'_ALL_Featuers.npy')[:,[i for i in range(14)]+[15,16]]
     indices_non_zero = np.where(Feas_read_sta[:,11] != 0)[0]
     WWR = np.load(city_path+city_name+'_ALL_Featuers.npy')[indices_non_zero,13:14]
@@ -415,142 +499,73 @@ list_all_city_ii = [list_all_city_j[:7],list_all_city_j[7:22],list_all_city_j[22
 
 aaCar_wo,aaCar_ww = [],[]
 aaPri_woFPV,aaPri_wFPV = [],[]
+bbCar_wo,bbCar_ww = [],[]
+bbPri_woFPV,bbPri_wFPV = [],[]
 for i in range(4):
     aaCar_wo.append(np.sum(Total_Carbon[list_all_city_ii[i],0,:],axis=1)/5)
     aaCar_ww.append(np.sum(Total_Carbon[list_all_city_ii[i],1,:],axis=1)/5)
     aaPri_woFPV.append(np.sum(Total_price_true[list_all_city_ii[i],0,:],axis=1)*1e10/5)
     aaPri_wFPV.append(np.sum(Total_price_true[list_all_city_ii[i],1,:],axis=1)*1e10/5)
-# #%%
-# fig, ax = plt.subplots(1,2,figsize=(20,6))
-# ax[0].boxplot(aaCar_wo, positions = np.arange(4) * 2.0,widths=0.4, patch_artist=True, boxprops=dict(facecolor='skyblue'))
-# ax[0].boxplot(aaCar_ww, positions = np.arange(4) * 2.0+0.5,widths=0.4, patch_artist=True, boxprops=dict(facecolor='mediumseagreen'))#, showfliers = False)
-# #ax[0].set_xlabel('City types', fontsize=s_font+4)
-# ax[0].set_ylabel('ton/MWh',fontsize=s_font+4)
-# ax[0].set_title("Unit carbon emission", fontsize=s_font+4, y=0.9, fontweight='bold')
 
-# ax[0].set_xticks(ticks=np.arange(4) * 2.0+0.25, labels=['SLC','VLC','LC-I','LC-II'],fontsize=s_font+2)
-# #ax[0].set_xticks(ticks=np.arange(4) * 2.0+0.25, labels=['','','',''],fontsize=s_font-0)
-# ax[0].tick_params(axis='y', labelsize=s_font+2)
-# #plt.legend(['RS', 'RS+F'], loc="upper right",fontsize=s_font-2)
-# legend_elements = [
-#     Patch(facecolor='skyblue', label='RS'),
-#     Patch(facecolor='mediumseagreen', label='RS+F')
-# ]
+#     bbCar_wo.append(np.sum(Total_Carbon_00[list_all_city_ii[i],0,:],axis=1))
+#     bbCar_ww.append(np.sum(Total_Carbon_00[list_all_city_ii[i],1,:],axis=1)) #ton
+#     bbPri_woFPV.append(np.sum(Total_price_00_true[list_all_city_ii[i],0,:],axis=1)*1e10) #CNY
+#     bbPri_wFPV.append(np.sum(Total_price_00_true[list_all_city_ii[i],1,:],axis=1)*1e10)
 
-# ax[0].set_ylim(0.1,0.24)
-# ax[0].set_yticks(0.01*np.arange(10, 24, 4))
-# ax[0].legend(handles=legend_elements,fontsize=s_font+2,loc='lower left',ncol=2,frameon=True)
-# #bbox_to_anchor=(1.1, -0.06),
+print(np.sum(bbCar_wo[0])/1e6) #MT
+print(np.sum(bbPri_woFPV[0])/1e9) #BCNY
 
-# for i in [1.25,3.25,5.25]:
-#     ax[0].axvline(x = i - 0, color='grey', linestyle='--', linewidth=0.6)
+print(np.sum(bbCar_ww[0])/1e6) #MT
+print(np.sum(bbPri_wFPV[0])/1e9) #BCNY
 
-# ax[1].boxplot(aaPri_woFPV, positions = np.arange(4) * 2.0,widths=0.4, patch_artist=True, boxprops=dict(facecolor='skyblue'), tick_labels=[""] * 4, showfliers = False)
-# ax[1].boxplot(aaPri_wFPV, positions = np.arange(4) * 2.0+0.5,widths=0.4, patch_artist=True, boxprops=dict(facecolor='mediumseagreen'), tick_labels=[""] * 4, showfliers = False)
-# # ax[1].set_xlabel('City types', fontsize=s_font+4)
-# ax[1].set_ylabel('CNY/kWh',fontsize=s_font+4)
-# ax[1].tick_params(axis='y', labelsize=s_font+2)
-# ax[1].set_xticks(ticks=np.arange(4) * 2.0+0.25, labels=['SLC','VLC','LC-I','LC-II'],fontsize=s_font+2)
-# ax[1].set_ylim(0.36,0.65)
-# ax[1].set_title("Unit cost", fontsize=s_font+4, y=0.9, fontweight='bold')
-# ax[1].legend(handles=legend_elements,fontsize=s_font+2,loc='lower left',ncol=2,frameon=True)
-# for i in [1.25,3.25,5.25]:
-#     ax[1].axvline(x = i - 0, color='grey', linestyle='--', linewidth=0.6)
-# ax[1].set_yticks(0.01*np.arange(36, 65, 9))
 
-# #plt.subplots_adjust(hspace=0.1)
-# fig.savefig('Figs_new/Fig1c.pdf',format='pdf',dpi=600,bbox_inches='tight')
-# fig.savefig("Figs_new/Fig1c.png", dpi=600,bbox_inches='tight')
-# plt.show()
 
-#%
+# print(np.argmax(bbCar_wo[0]-bbCar_ww[0])/1e6)
+# print(np.argmax(bbPri_woFPV[0]-bbPri_wFPV[0])/1e9)
+
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-fig, ax = plt.subplots(2, 1, figsize=(20, 6))
-violin1 = ax[0].violinplot(
-    aaCar_wo, 
-    positions=np.arange(4) * 2.0, 
-    widths=0.6,
-    showmeans=True,
-    showextrema=True
-)
-violin2 = ax[0].violinplot(
-    aaCar_ww, 
-    positions=np.arange(4) * 2.0 + 0.8, 
-    widths=0.6,
-    showmeans=True,
-    showextrema=True
-)
-
-for pc in violin1['bodies']:
-    pc.set_facecolor('skyblue')
-    pc.set_alpha(0.7)
-for pc in violin2['bodies']:
-    pc.set_facecolor('mediumseagreen')
-    pc.set_alpha(0.7)
-
-ax[0].set_ylabel('ton/MWh', fontsize=s_font+4)
-ax[0].set_title("Unit carbon emission", fontsize=s_font+4, y=0.82, fontweight='bold')
-#ax[0].set_xticks(ticks=np.arange(4) * 2.0 + 0.4, labels=['SLC','VLC','LC-I','LC-II'], fontsize=s_font+2)
-ax[0].set_xticks([])
-ax[0].tick_params(axis='y', labelsize=s_font+2)
-ax[0].set_ylim(0.1, 0.24)
-ax[0].set_yticks(0.01 * np.arange(10, 24, 4))
-
-legend_elements = [
-    Patch(facecolor='skyblue', label='RS'),
-    Patch(facecolor='mediumseagreen', label='RS+F')
-]
-ax[0].legend(handles=legend_elements, fontsize=s_font+2, loc='lower center',bbox_to_anchor=(0.5, -0.3), ncol=2, frameon=False)
-
-for i in [1.4, 3.4, 5.4]:
-    ax[0].axvline(x=i, color='grey', linestyle='--', linewidth=0.8)
+fig, ax = plt.subplots(1, 4, figsize=(20, 6))
+for i in range(4):
+    ax[i].scatter(aaPri_woFPV[i], aaCar_wo[i], color='deepskyblue', label='RS',s=80,alpha = 0.5)
+    ax[i].scatter(aaPri_wFPV[i], aaCar_ww[i], color='seagreen', label='RS+F',s=80,alpha = 0.5)
+    for ii in range(len(aaPri_woFPV[i])):
+        ax[i].plot([aaPri_woFPV[i][ii], aaPri_wFPV[i][ii]], [aaCar_wo[i][ii], aaCar_ww[i][ii]], color='grey', linestyle='--', linewidth=0.5)
+    ax[i].set_title(['SLC','VLC','LC-I','LC-II'][i], fontsize=s_font+10)
+    ax[i].set_xlabel('Unit cost (CNY/kWh)', fontsize=s_font+8)
+    ax[i].set_ylim(0.11, 0.22)
+    ax[i].set_xlim(0.36, 0.65)
+    
+    if i == 0:
+        ax[i].set_ylabel('Unit carbon (ton/MWh)', fontsize=s_font+8)
+        ax[i].legend(fontsize=s_font+4)
+    if i >= 1:
+        ax[i].set_yticks([])
 
 
-violin3 = ax[1].violinplot(
-    aaPri_woFPV, 
-    positions=np.arange(4) * 2.0, 
-    widths=0.6,
-    showmeans=True,
-    showextrema=True
-)
-violin4 = ax[1].violinplot(
-    aaPri_wFPV, 
-    positions=np.arange(4) * 2.0 + 0.8, 
-    widths=0.6,
-    showmeans=True,
-    showextrema=True
-)
+ax[0].text(0.25,0.23,'c',fontsize=fs+15, fontweight='bold', va='top', ha='right')
 
-for pc in violin3['bodies']:
-    pc.set_facecolor('skyblue')
-    pc.set_alpha(0.7)
-for pc in violin4['bodies']:
-    pc.set_facecolor('mediumseagreen')
-    pc.set_alpha(0.7)
 
-ax[1].set_ylabel('CNY/kWh', fontsize=s_font+4)
-ax[1].set_title("Unit cost", fontsize=s_font+4, y=0.82, fontweight='bold')
-ax[1].set_xticks(ticks=np.arange(4) * 2.0 + 0.4, labels=['SLC','VLC','LC-I','LC-II'], fontsize=s_font+2)
-ax[1].tick_params(axis='y', labelsize=s_font+2)
-ax[1].set_ylim(0.36, 0.65)
-ax[1].set_yticks(0.01 * np.arange(36, 65, 9))
+ax[0].text(aaPri_woFPV[0][0]-0.05, aaCar_wo[0][0]+0.005, 'Beijing' ,color='k')
+ax[0].scatter(aaPri_woFPV[0][0], aaCar_wo[0][0], color='deepskyblue', s=150,alpha = 1)
+ax[0].scatter(aaPri_wFPV[0][0], aaCar_ww[0][0], color='seagreen', s=150,alpha = 1)
+ax[0].text(aaPri_woFPV[0][0]-0.05, aaCar_wo[0][0]-0.02, str(round(100*(aaCar_wo[0][0]-aaCar_ww[0][0])/aaCar_wo[0][0],1))+'%↓' ,color='k')
+ax[0].hlines(y=aaCar_ww[0][0], xmin=aaPri_wFPV[0][0], xmax=aaPri_woFPV[0][0], color='grey', linestyle='--', linewidth=0.5)
+ax[0].vlines(x = aaPri_woFPV[0][0], ymin=aaCar_ww[0][0], ymax=aaCar_wo[0][0], color='grey', linestyle='--', linewidth=0.5)
 
-for i in [1.4, 3.4, 5.4]:
-    ax[1].axvline(x=i, color='grey', linestyle='--', linewidth=0.8)
 
-plt.subplots_adjust(hspace=0.28)
+ax[1].text(aaPri_woFPV[1][0]-0.03, aaCar_wo[1][0]+0.005, 'Wuhan' ,color='k')
+ax[1].scatter(aaPri_woFPV[1][0], aaCar_wo[1][0], color='deepskyblue', s=100,alpha = 1)
+ax[1].scatter(aaPri_wFPV[1][0], aaCar_ww[1][0], color='seagreen', s=100,alpha = 1)
+ax[1].text(aaPri_woFPV[1][0]-0.025, aaCar_wo[1][0]-0.02, str(round(100*(aaCar_wo[1][0]-aaCar_ww[1][0])/aaCar_wo[1][0],1))+'%↓' ,color='k')
+ax[1].hlines(y=aaCar_ww[1][0], xmin=aaPri_wFPV[1][0], xmax=aaPri_woFPV[1][0], color='grey', linestyle='--', linewidth=0.5)
+ax[1].vlines(x = aaPri_woFPV[1][0], ymin=aaCar_ww[1][0], ymax=aaCar_wo[1][0], color='grey', linestyle='--', linewidth=0.5)
 
+plt.subplots_adjust(wspace=0.1)
+plt.tight_layout()
 fig.savefig('Figs_new/Fig1c.pdf', format='pdf', dpi=600, bbox_inches='tight')
 fig.savefig("Figs_new/Fig1c.png", dpi=600, bbox_inches='tight')
 plt.show()
-
-
-#%%
-
-aa1 = (aaPri_woFPV[0]-aaPri_wFPV[0])/aaPri_woFPV[0]
-aa2 = (aaPri_woFPV[1]-aaPri_wFPV[1])/aaPri_woFPV[1]
-aa3 = (aaPri_woFPV[2]-aaPri_wFPV[2])/aaPri_woFPV[2]
-aa4 = (aaPri_woFPV[3]-aaPri_wFPV[3])/aaPri_woFPV[3]

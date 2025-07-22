@@ -101,7 +101,12 @@ import pandas as pd
 import numpy as np
 import random
 from sklearn.model_selection import cross_validate, KFold, train_test_split
-
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 
 def re_input_new(i_lab,Feas_input,Feas_read_info):
     #indices_zero = np.where(Feas_input[:,11] == 0)[0]
@@ -114,7 +119,7 @@ def re_input_new(i_lab,Feas_input,Feas_read_info):
         Feas_input_new[:,2] = Feas_read_info[:,0]
     return Feas_input_new
 
-save_ML_file = '#ML_model/'
+save_ML_file = ''
 path_save = 'ALL_sample_results'
 city_path = 'ALL_102_cities/'
 ALL_city = pd.read_excel('Fig_input_data/Climate_WWR.xlsx',sheet_name = 'Climate').iloc[:,1].tolist()
@@ -173,8 +178,9 @@ Feas_input = re_input_new(i_lab,Feas_input,Feas_read_inf)
 X_train, X_test, y_train, y_test = train_test_split(Feas_input, Feas_output[:,i_lab:i_lab+1], test_size=0.2, random_state=20)
 fig = plt.figure(figsize=(8, 6))
 plt.hist(y_train, bins=100, color='steelblue', edgecolor='k', alpha=0.7)
+
 plt.xlim(0,200)
-plt.xlabel('Facade irradiance (MW)',fontsize = 20)
+plt.xlabel('Label values (MW)',fontsize = 20)
 plt.yticks(fontsize=16)
 plt.xticks(fontsize=16)
 fig.savefig('Figs_new_supp/sOther_label_distribution.pdf', format='pdf', dpi=600, bbox_inches='tight')
@@ -192,10 +198,10 @@ from matplotlib.patches import Patch
 from geopy.distance import geodesic
 from scipy.io import savemat,loadmat
 
-path = '#ML_results/'
+path = ''
 city_path = 'ALL_102_cities/'
-path_type = '#ML_results/Power'
-path_cap = '#ML_results/Capacity'
+path_type = 'Power'
+path_cap = 'Capacity'
 City_statistic = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Class_Volume', index_col=0)
 Statis_all = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
 
@@ -256,7 +262,7 @@ ax1.yaxis.set_tick_params(labelsize=s_font-2)
 sorted_indices = np.argsort(G_type[:,3])
 ax2.plot(G_type[sorted_indices,3])
 ax2.scatter(2000,G_type[sorted_indices,:][2000,3],color = 'red',s = 100,marker = 'o')
-ax2.set_xlabel('Cell index',fontsize = s_font)
+ax2.set_xlabel('Index of grid cell',fontsize = s_font)
 ax2.set_ylabel('Building number',fontsize = s_font)
 ax2.xaxis.set_tick_params(labelsize=s_font-2)
 ax2.yaxis.set_tick_params(labelsize=s_font-2)

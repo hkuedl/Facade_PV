@@ -3,6 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.colors import ListedColormap
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 
 ## ------------------------ Plotting Parameters Setup ------------------------
 ratio_plot = 3  # Scaling factor for plot dimensions. Larger plots ensure clarity even when converted to bitmap, hence enlarged.
@@ -343,7 +349,7 @@ x_raw = df[x_col][mask].values
 y_raw = df[y_col][mask].values / 1e3  # Convert to GWh
 
 np.random.seed(42)  # Set random seed, 42 is a commonly used example value, can be replaced with any integer
-sample_size = min(20000, len(x_raw))  # Avoid data size smaller than 20000
+sample_size = min(len(x_raw), len(x_raw))  # Avoid data size smaller than 20000
 sample_idx = np.random.choice(len(x_raw), size=sample_size, replace=False, )
 x = x_raw[sample_idx]
 y = y_raw[sample_idx]
@@ -362,10 +368,11 @@ sc = ax.scatter(x_sorted, y_sorted,  color=colors[-1],
         s=20, alpha=0.8, edgecolors='none')  # Default size 20
 
 # Set axis labels, grid, and legend
-ax.set_xlim(0, 1.2)
-ax.set_xticks(np.arange(0, 1.2+0.1, 0.3))
-ax.set_ylim(0, 180)
-ax.set_yticks(np.arange(0, 181, 45))
+ax.set_xlim(0, 1.5)
+ax.set_xticks(np.arange(0, 1.5+0.1, 0.3))
+ax.set_xticklabels(['0', '0.3', '0.6', '0.9', '1.2', '1.5'])
+ax.set_ylim(0, 200)
+ax.set_yticks(np.arange(0, 201, 50))
 
 ax.set_xlabel('Complexity (\u2013)', fontsize=fs-3)
 ax.set_ylabel('Annual generation (GWh)', fontsize=fs-3)
@@ -385,7 +392,7 @@ plt.show()
 import Functions
 from scipy.io import savemat,loadmat
 Clu_center,Clu_days = np.load('Fig_input_data/Clu_center.npy'),np.load('Fig_input_data/Clu_days.npy')
-path = '#ML_results/'
+path = ''
 City_statistic = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Class_Volume', index_col=0)
 Building_number = []
 Building_avghei = []
@@ -397,9 +404,9 @@ for cc in range(102):
     city_name = City_statistic.index[cc]
     print(city_name)
     _,K3_TOU_indu_i,K3_TOU_resi_i,K3_net_i,Carbon_F = Functions.TOU_period(city_name)
-    G_type = np.load('#ML_results/Grid_type/'+'Grid_type_'+city_name+'.npy')
+    G_type = np.load('Grid_type/'+'Grid_type_'+city_name+'.npy')
     N_gg = np.where(G_type[:,0] != 888)[0]
-    P1 = '#ML_results/Power1/N_P_facade_ideal_1_'+city_name+'.npy'
+    P1 = 'Power1/N_P_facade_ideal_1_'+city_name+'.npy'
     Power = np.sum(np.load(P1),axis = 1)
     Building_number.append(G_type[N_gg,3])
     Building_count += len(G_type[N_gg,3])
@@ -439,7 +446,9 @@ Building_y = np.concatenate(Building_y)[mask][sample_idx]
 
 print(np.min(Building_y), np.max(Building_y))
 
+
 #%%
+
 Building_y_normalized = (Building_y - Building_y.min()) / (Building_y.max() - Building_y.min()) * 100
 fig = plt.figure(figsize=np.array([figwidth * 2/3, figwidth * 2/3 * 0.7]) / 2.54)
 scatter = plt.scatter(
@@ -451,8 +460,9 @@ scatter = plt.scatter(
     edgecolors='black',
     linewidth=0.5
 )
-plt.xlim(-10, 4000)
-plt.ylim(10, 40)
+plt.xlim(-10, 6000)
+plt.ylim(10, 60)
+# plt.xticks(np.arange(0, 5001, 1000), fontsize=fs-3)
 cbar = plt.colorbar(scatter, label='Point Size')
 cbar.set_label('Annual generation (GWh)', fontsize=fs-3)
 cbar.set_ticks([0,45,90,135,180])
@@ -495,7 +505,7 @@ for i in range(4):
         shadow = False,
         explode=explode,
     )
-    ax.set_title(pie_titles[i], fontsize=fs-7, fontweight='bold')
+    ax.set_title(pie_titles[i], fontsize=fs-3, fontweight='bold')
 
     wedges[0].set_edgecolor('blue')
     wedges[0].set_linewidth(1.2)

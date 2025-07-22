@@ -8,15 +8,20 @@ import numpy as np
 from matplotlib.patches import Patch
 from geopy.distance import geodesic
 from scipy.io import savemat,loadmat
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
 
 path = '#ML_results/'
 city_path = 'ALL_102_cities/'
-path_type = '#ML_results/Power'
-path_cap = '#ML_results/Capacity'
-
+path_type = 'Power'
+path_cap = 'Capacity'
 City_statistic = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Class_Volume', index_col=0)
 Statis_all = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
 
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 
 #3: Beijing; 74: Wuhan; 63: Suzhou; 92：Changchun; 56: Shanghai； 15: Guangzhou；59：shenzhen；60：shenyang
 for cc in [3,74,59]:
@@ -106,8 +111,7 @@ for cc in [3,74,59]:
         background = [0,24*3,24*6,24*9,24*12]
         backgroundcolor = ['whitesmoke','lightgrey','whitesmoke','lightgrey']
         for i in range(4):
-            ax.axvspan(background[i], background[i+1], facecolor=backgroundcolor[i], alpha=0.5)  # alpha控制透明度
-
+            ax.axvspan(background[i], background[i+1], facecolor=backgroundcolor[i], alpha=0.5)  
         colors = ['skyblue', 'mediumseagreen', 'moccasin', 'tomato', 'darksalmon', 'darkorange', 'orange']
         ax.plot(hours, load_curve, label='Load', color='black', linestyle = '--' ,linewidth=2)
         ax.stackplot(hours, RPV_output, FPV_output, grid_purchase, St_dis,St_ch,grid_discard,grid_sell,
@@ -156,19 +160,29 @@ for cc in [3,74,59]:
     background = [0,24*3,24*6,24*9,24*12]
     backgroundcolor = ['whitesmoke','lightgrey','whitesmoke','lightgrey']
     for i in range(4):
-        ax.axvspan(background[i], background[i+1], facecolor=backgroundcolor[i], alpha=0.5) 
-    ax.plot(x, values1, label='RS', color='blue', linestyle='-', linewidth=2.0, alpha=1)
-    ax.plot(x, values2, label='RS+F', color='green', linestyle='-', linewidth=2.0, alpha=1)
+        ax.axvspan(background[i], background[i+1], facecolor=backgroundcolor[i], alpha=0.5)  
+    ax.plot(x, values1, label='RS', color='deepskyblue', linestyle='--', linewidth=2.5, alpha=1)
+    ax.plot(x, values2, label='RS+F', color='seagreen', linestyle='-', linewidth=2.5, alpha=1)
     #ax.vlines(x=[24*3, 24*6, 24*9], ymin=0, ymax=0.6, colors='black', linestyles=':', linewidth=5)
     ax.set_title('Carbon emission', fontsize=s_font+2, fontweight='bold',y=0.9)
     #ax.set_xlabel('Time', fontsize=s_font)
     ax.set_ylabel('p.u.', fontsize=s_font+7)
     ax.set_xlim(-2,24*12+2)
     ax.set_ylim(0, 0.6)
+    ax.set_yticks([0, 0.2, 0.4, 0.6])
+    #ax.set_yticklabels(['', '0.2', '0.4', '0.6'],fontsize = s_font+2)
     #ax.set_xticks(np.arange(0, 25, 6))
-    ax.set_xticks([12*3,36*3,60*3,84*3])
-    ax.set_xticklabels(['Spring', 'Summer', 'Autumn', 'Winter'],fontsize = s_font+2)
+    #ax.set_xticks([12*3,36*3,60*3,84*3])
+    #ax.set_xticklabels(['Spring', 'Summer', 'Autumn', 'Winter'],fontsize = s_font+2)
+    ax.set_xticks([12*1,12*3,12*5,12*7,12*9,12*11,12*13,12*15,12*17,12*19,12*21,12*23])
+    ax.set_xticklabels(['Day1', 'Day2', 'Day3']*4,fontsize = s_font)
     ax.tick_params(axis='y', labelsize=s_font-3)
+    #ax.text(0, -0.03, 'Days',fontsize=s_font+2, color='k',ha='center',va='center')
+    season_kk = [12*3,36*3,60*3,84*3]
+    season = ['Spring', 'Summer', 'Autumn', 'Winter']
+    for kk in range(4):
+        ax.text(season_kk[kk], -0.12, season[kk],fontsize=s_font+2, color='k',ha='center',va='center')
+    
     #ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper left', fontsize=s_font)
     plt.tight_layout()

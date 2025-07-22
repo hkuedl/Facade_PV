@@ -8,16 +8,18 @@ import numpy as np
 from matplotlib.patches import Patch
 from geopy.distance import geodesic
 from scipy.io import savemat,loadmat
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
 
-path = '#ML_results/'
+path = ''
 city_path = 'ALL_102_cities/'
-path_type = '#ML_results/Power'
-path_cap = '#ML_results/Capacity'
+path_type = 'Power'
+path_cap = 'Capacity'
 City_statistic = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Class_Volume', index_col=0)
 Statis_all = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
 
 #3: Beijing; 74: Wuhan; 63: Suzhou; 92：Changchun; 56: Shanghai； 15: Guangzhou；59：shenzhen；60：shenyang
-cc = 59
+cc = 3  #74, 59
 city_name = City_statistic.index[cc]
 print(city_name)
 
@@ -29,7 +31,7 @@ else:
 C1 = path_cap+'/Cap_facade_'+city_name+'.npy'
 C2 = path_cap+'/Cap_roof_'+city_name+'.npy'
 
-G_type = np.load('#ML_results/Grid_type/'+'Grid_type_'+city_name+'.npy')
+G_type = np.load('Grid_type/'+'Grid_type_'+city_name+'.npy')
 Feas_read_sta = np.load(city_path+city_name+'_ALL_Featuers.npy')[:,[i for i in range(14)]+[15,16]]
 indices_non_zero = np.where(Feas_read_sta[:,11] != 0)[0]
 WWR = np.load(city_path+city_name+'_ALL_Featuers.npy')[indices_non_zero,13:14]
@@ -113,7 +115,7 @@ for i in range(4):
 
 
 
-s_font_title,s_font_legend,s_font_label,s_font_label_title = 40,40,40,40
+s_font_title,s_font_legend,s_font_label,s_font_label_title = 60,60,60,60
 
 geojson_path = '#Opt_results/'+city_name+'.json'
 with open(geojson_path, 'r', encoding='utf-8') as f:
@@ -144,6 +146,11 @@ data['geometry'] = data.progress_apply(lambda row: create_square(float(row['Lat.
 # colors = ['Oranges', 'Purples', 'Greens', 'Blues']
 types = ['HnD','HnS','MnD','MnS']
 colors = [ 'Blues', 'Oranges', 'Greens', 'Purples']
+
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(45, 15), gridspec_kw={'wspace': 0.1})
 
 for ax in [ax1, ax2, ax3]:
@@ -157,22 +164,36 @@ for ax in [ax1, ax2, ax3]:
             x, y = geom.exterior.xy
             ax.plot(x, y, color='black')
 
-norm = plt.Normalize(data['Capacity-2030(KW)'].min(), 0.7*data['Capacity-2050(KW)'].max())
+#norm = plt.Normalize(data['Capacity-2030(KW)'].min()/1000, 0.5*data['Capacity-2050(KW)'].max()/1000)
+if cc == 3:
+    norm = plt.Normalize(0, 80)
+elif cc == 74:
+    norm = plt.Normalize(0, 80)
+elif cc == 59:
+    norm = plt.Normalize(0, 80)
 
+
+Data_ratio = np.zeros((len(types),3))
+for i in range(3):
+    for j in range(4):
+        Data_ratio[j,i] = data[data['Type'] == types[j]]['Capacity-20'+str(30+i*10)+'(KW)'].sum() / data['Capacity-20'+str(30+i*10)+'(KW)'].sum()
+        Data_ratio[j,i] = round(100*Data_ratio[j,i],1)
+    if sum(Data_ratio[:,i]) != 100:
+        Data_ratio[0,i] = 100 - sum(Data_ratio[1:,i])
 ax1.get_legend_handles_labels()[1]
 
 for t, cmap_name in zip(types, colors):
     cmap = plt.get_cmap(cmap_name)
     for _, row in data[data['Type'] == t].iterrows():
         x, y = row['geometry'].exterior.xy
-        color1 = cmap(norm(row['Capacity-2030(KW)']))
-        color2 = cmap(norm(row['Capacity-2040(KW)']))        
-        color3 = cmap(norm(row['Capacity-2050(KW)']))        
+        color1 = cmap(norm(row['Capacity-2030(KW)']/1000))
+        color2 = cmap(norm(row['Capacity-2040(KW)']/1000))        
+        color3 = cmap(norm(row['Capacity-2050(KW)']/1000))        
         ax1.fill(x, y, color=color1, alpha=0.9, label=t if t not in ax1.get_legend_handles_labels()[1] else "")
         ax2.fill(x, y, color=color2, alpha=0.9, label=t if t not in ax2.get_legend_handles_labels()[1] else "")
         ax3.fill(x, y, color=color3, alpha=0.9, label=t if t not in ax3.get_legend_handles_labels()[1] else "")
 
-ax1.set_title('2030',fontsize = s_font_title, fontweight='bold')
+ax1.set_title('2030',fontsize = s_font_title, fontweight='bold',y=0.97)
 #ax1.set_xlabel('Longitude',fontsize = s_font)
 #ax1.set_ylabel('Latitude',fontsize = s_font)
 #ax1.legend(handles=custom_lines, loc="upper left", fontsize = s_font)
@@ -193,10 +214,13 @@ custom_lines = [Patch(facecolor='darkorange', edgecolor='darkorange', label=type
                 Patch(facecolor='green', edgecolor='green', label=types[2]),
                 Patch(facecolor='blue', edgecolor='blue', label=types[3])]
 
-ax2.set_title('2040',fontsize = s_font_title, fontweight='bold')
-#ax2.set_xlabel('Longitude',fontsize = s_font)
-#ax2.set_ylabel('Latitude',fontsize = s_font)
-#ax2.legend(handles=custom_lines, loc="upper left", fontsize = s_font)
+ax2.set_title('2040',fontsize = s_font_title, fontweight='bold',y=0.97)
+if cc == 59:
+    ax2.text(0.5, 1.13, 'Shenzhen (SLC)', fontsize=s_font_title,fontweight='bold', ha='center', va='center', transform=ax2.transAxes)
+elif cc == 74:
+    ax2.text(0.5, 1.13, 'Wuhan (VLC)', fontsize=s_font_title,fontweight='bold', ha='center', va='center', transform=ax2.transAxes)
+elif cc == 3:
+    ax2.text(0.5, 1.13, 'Beijing (SLC)', fontsize=s_font_title,fontweight='bold', ha='center', va='center', transform=ax2.transAxes)
 ax2.spines['top'].set_visible(False)
 ax2.spines['right'].set_visible(False)
 ax2.spines['bottom'].set_visible(False)
@@ -209,7 +233,7 @@ if cc != 59:
     ax2.add_patch(out22)
     ax2.add_patch(out32)
 
-ax3.set_title('2050',fontsize = s_font_title, fontweight='bold')
+ax3.set_title('2050',fontsize = s_font_title, fontweight='bold',y=0.97)
 ax3.spines['top'].set_visible(False)
 ax3.spines['right'].set_visible(False)
 ax3.spines['bottom'].set_visible(False)
@@ -227,7 +251,7 @@ center_line = mlines.Line2D([], [], color='gray', linestyle='-', linewidth=8, la
 neighbor_line = mlines.Line2D([], [], color='gray', linestyle='--', linewidth=8, label='Expansion')
 outlier_dot = mlines.Line2D([], [], color='gray', linestyle='-.', linewidth=8, label='Suburb')
 if cc == 3:
-    ax2.legend(handles=[center_line, neighbor_line, outlier_dot], loc='upper left',bbox_to_anchor=(-0.2, 1),frameon=True, fontsize = s_font_legend)
+    ax2.legend(handles=[center_line, neighbor_line, outlier_dot], loc='upper left',bbox_to_anchor=(-0.2, 1),frameon=True, fontsize = s_font_legend-20)
 
 handles1, labels1 = ax1.get_legend_handles_labels()
 handles2, labels2 = ax2.get_legend_handles_labels()
@@ -241,10 +265,10 @@ for handle in handles3:
     handle.set_alpha(1)
 
 fig.subplots_adjust(bottom=0.3)
-cbar_ax1 = fig.add_axes([0.14, 0.27, 0.15, 0.02])
-cbar_ax2 = fig.add_axes([0.34, 0.27, 0.15, 0.02])
-cbar_ax3 = fig.add_axes([0.54, 0.27, 0.15, 0.02])
-cbar_ax4 = fig.add_axes([0.74, 0.27, 0.15, 0.02])
+cbar_ax1 = fig.add_axes([0.14+0.14, 0.25, 0.13, 0.02])
+cbar_ax2 = fig.add_axes([0.14+0.34-0.04, 0.25, 0.13, 0.02])
+cbar_ax3 = fig.add_axes([0.14+0.54-0.08, 0.25, 0.13, 0.02])
+cbar_ax4 = fig.add_axes([0.14+0.74-0.12, 0.25, 0.13, 0.02])
 
 sm1 = plt.cm.ScalarMappable(cmap=plt.get_cmap(colors[0]), norm=norm)
 sm2 = plt.cm.ScalarMappable(cmap=plt.get_cmap(colors[1]), norm=norm)
@@ -252,21 +276,53 @@ sm3 = plt.cm.ScalarMappable(cmap=plt.get_cmap(colors[2]), norm=norm)
 sm4 = plt.cm.ScalarMappable(cmap=plt.get_cmap(colors[3]), norm=norm)
 
 cbar1 = fig.colorbar(sm1, cax=cbar_ax1, orientation='horizontal')
-cbar1.ax.tick_params(labelsize = s_font_label)
-cbar1.set_label(types[0], fontsize = s_font_label_title, labelpad=15)
+cbar1.ax.tick_params(labelsize = s_font_label-5)
+cbar1.ax.xaxis.set_ticks_position('top')
+vmin, vmax = data['Capacity-2030(KW)'].min()/1000, 0.5*data['Capacity-2050(KW)'].max()/1000
+cbar1.set_ticks([0, 80])
+cbar1.set_ticklabels([f'{0}', f'{80}'])
+cbar1.set_label(types[0]+'\n'+str(Data_ratio[0,0])+'\u2192'+str(Data_ratio[0,1])+'\u2192'+str(Data_ratio[0,2]), fontsize = s_font_label_title-5, labelpad=35)
+#cbar1.set_label(types[0], fontsize = s_font_label_title-5, labelpad=35)
 
 cbar2 = fig.colorbar(sm2, cax=cbar_ax2, orientation='horizontal')
-cbar2.ax.tick_params(labelsize = s_font_label)
-cbar2.set_label(types[1], fontsize = s_font_label_title, labelpad=15)
+cbar2.ax.tick_params(labelsize = s_font_label-5)
+cbar2.ax.xaxis.set_ticks_position('top')
+cbar2.set_ticks([0, 80])
+cbar2.set_ticklabels([f'{0}', f'{80}'])
+cbar2.set_label(types[1]+'\n'+str(Data_ratio[1,0])+'\u2192'+str(Data_ratio[1,1])+'\u2192'+str(Data_ratio[1,2]), fontsize = s_font_label_title-5, labelpad=35)
+#cbar2.set_label(types[1], fontsize = s_font_label_title-5, labelpad=35)
 
 cbar3 = fig.colorbar(sm3, cax=cbar_ax3, orientation='horizontal')
-cbar3.ax.tick_params(labelsize = s_font_label)
-cbar3.set_label(types[2], fontsize = s_font_label_title, labelpad=15)
+cbar3.ax.tick_params(labelsize = s_font_label-5)
+cbar3.ax.xaxis.set_ticks_position('top')
+cbar3.set_ticks([0, 80])
+cbar3.set_ticklabels([f'{0}', f'{80}'])
+cbar3.set_label(types[2]+'\n'+str(Data_ratio[2,0])+'\u2192'+str(Data_ratio[2,1])+'\u2192'+str(Data_ratio[2,2]), fontsize = s_font_label_title-5, labelpad=35)
+#cbar3.set_label(types[2], fontsize = s_font_label_title-5, labelpad=35)
 
 cbar4 = fig.colorbar(sm4, cax=cbar_ax4, orientation='horizontal')
-cbar4.ax.tick_params(labelsize = s_font_label)
-cbar4.set_label(types[3], fontsize = s_font_label_title, labelpad=15)
+cbar4.ax.tick_params(labelsize = s_font_label-5)
+cbar4.ax.xaxis.set_ticks_position('top')
+cbar4.set_ticks([0, 80])
+cbar4.set_ticklabels([f'{0}', f'{80}'])
+cbar4.set_label(types[3]+'\n'+str(Data_ratio[3,0])+'\u2192'+str(Data_ratio[3,1])+'\u2192'+str(Data_ratio[3,2]), fontsize = s_font_label_title-5, labelpad=35)
+#cbar4.set_label(types[3], fontsize = s_font_label_title-5, labelpad=35)
 
+ax1.text(0.25, -0.07, 'Capacity (MW)', fontsize=s_font_label, ha='center', va='center', transform=ax1.transAxes)
+ax1.text(0.25, -0.23, 'Capacity ratio (%)', fontsize=s_font_label, ha='center', va='center', transform=ax1.transAxes)
+# ax1.text(-0.18, 0.55, 'Capacity ratio\n\nHnD\n\nHnS\n\nMnD\n\nMnS', fontsize=s_font_label, ha='center', va='center', transform=ax1.transAxes)
+# ax1.text(1, 0.55, ' \n\n'+str(Data_ratio[0,0])+'\n\n'+str(Data_ratio[1,0])+'\n\n'+str(Data_ratio[2,0])+'\n\n'+str(Data_ratio[3,0]), fontsize=s_font_label, ha='center', va='center', transform=ax1.transAxes)
+# ax2.text(1, 0.55, ' \n\n'+str(Data_ratio[0,1])+'\n\n'+str(Data_ratio[1,1])+'\n\n'+str(Data_ratio[2,1])+'\n\n'+str(Data_ratio[3,1]), fontsize=s_font_label, ha='center', va='center', transform=ax2.transAxes)
+# ax3.text(1, 0.55, ' \n\n'+str(Data_ratio[0,2])+'\n\n'+str(Data_ratio[1,2])+'\n\n'+str(Data_ratio[2,2])+'\n\n'+str(Data_ratio[3,2]), fontsize=s_font_label, ha='center', va='center', transform=ax3.transAxes)
+
+if cc == 59:
+    ttx = 'c'
+elif cc == 74:
+    ttx = 'b'
+elif cc == 3:
+    ttx = 'a'
+
+ax1.text(0.0, 1.1, ttx,fontweight='bold', fontsize=s_font_label+40, ha='center', va='center', transform=ax1.transAxes)
 
 fig.savefig('Figs_new/Fig5-'+city_name+'.pdf',format='pdf',dpi=600,bbox_inches='tight')
 fig.savefig('Figs_new/Fig5-'+city_name+'.png', dpi=600,bbox_inches='tight')

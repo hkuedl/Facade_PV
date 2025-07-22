@@ -3,7 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.colors import ListedColormap
-
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 ## ------------------------ Plotting parameter setup ------------------------
 ratio_plot = 3  # Scaling factor for figure-related sizes. Using a larger figure ensures clarity even after conversion to bitmap.
 
@@ -241,7 +246,7 @@ for ax in [main_ax, mini_ax]:
 
 # Set title
 main_ax.set_title(
-    'Ideal annual generation of FPV',
+    'Annual electricity generation of FPV',
     y=0.92,
     fontsize=fs-3,
     weight='normal',
@@ -374,7 +379,7 @@ for ax in [main_ax, mini_ax]:
 
 # Set title
 main_ax.set_title(
-    'Ideal annual generation of RPV',
+    'Annual electricity generation of RPV',
     y=0.92,
     fontsize=fs-3,
     weight='normal',
@@ -462,7 +467,7 @@ ax.plot(x_fit, y_fit, '-', color=color_fit, linewidth=lw2,
         label=f'$y={k:.2f}x$')  #  Optionally also show R²
 ax.text(
     0.95, 0.35,           # Near the end of the fitted line
-    f'$R^2={R2:.2f}$',    # Annotation text
+    f'$R^2={R2:.2f}$\n(p<0.05)',    # Annotation text
     fontsize=fs - 6,
     color=color_fit,
     transform=ax.transAxes,
@@ -472,8 +477,8 @@ ax.text(
 # Set axis labels
 ax.set_xlim(0, 90)
 ax.set_ylim(0, 90)
-ax.set_xlabel('Ideal generation of RPV (TWh)', fontsize=fs-4)
-ax.set_ylabel('Ideal generation of FPV (TWh)', fontsize=fs-4)
+ax.set_xlabel('RPV', fontsize=fs-4)
+ax.set_ylabel('FPV', fontsize=fs-4)
 
 # Add y = x reference line
 x_limits = ax.get_xlim()
@@ -482,7 +487,7 @@ ax.plot(x_line, x_line, linestyle='-', color='gray', linewidth=lw, label='$y=x$'
 
 # Set grid and legend
 ax.grid(alpha=0.5)
-
+ax.set_title('Electricity generation comparison (TWh)', fontsize=fs - 5)
 lg = ax.legend(loc='best', fontsize=fs - 6)
 frame = lg.get_frame()
 frame.set_linewidth(0.6)

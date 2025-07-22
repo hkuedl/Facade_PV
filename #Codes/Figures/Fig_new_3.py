@@ -4,101 +4,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import savemat,loadmat
 import os
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
 
 path = '#ML_results/'
 city_path = 'ALL_102_cities/'
-path_type = '#ML_results/Power'
-path_cap = '#ML_results/Capacity'
+path_type = 'Power'
+path_cap = 'Capacity'
 City_statistic = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Class_Volume', index_col=0)
 Statis_all = pd.read_excel(path+'City_statistic.xlsx',sheet_name = 'Key_information', index_col=0)
-
-# Clu_center,Clu_days = np.load('Fig_input_data/Clu_center.npy'),np.load('Fig_input_data/Clu_days.npy')
-# Total_Cap_total = np.zeros((102,2,5))
-# Total_Ele = np.zeros((102,5))
-# Total_Cost_total = np.zeros((102,6,5))
-# Total_price = np.zeros((102,2,5))
-# Total_price_true = np.zeros((102,2,5))
-# Total_Carbon = np.zeros((102,2,5))
-# Total_Carbon_00 = np.zeros((102,2,5))
-# Total_price_00 = np.zeros((102,2,5))
-# Total_price_00_true = np.zeros((102,2,5))
-# Total_area = np.zeros((102,1))
-# for cc in range(102):  #[3,15,56,59]:
-#     city_name = City_statistic.index[cc]
-#     print(city_name)
-#     C1 = path_cap+'/Cap_facade_'+city_name+'.npy'
-#     C2 = path_cap+'/Cap_roof_'+city_name+'.npy'
-#     G_type = np.load('#ML_results/Grid_type/'+'Grid_type_'+city_name+'.npy')
-#     Feas_read_sta = np.load(city_path+city_name+'_ALL_Featuers.npy')[:,[i for i in range(14)]+[15,16]]
-#     indices_non_zero = np.where(Feas_read_sta[:,11] != 0)[0]
-#     WWR = np.load(city_path+city_name+'_ALL_Featuers.npy')[indices_non_zero,13:14]
-#     N_grid = G_type.shape[0]
-#     N_gg = np.where(G_type[:,0] != 888)[0]
-#     Total_area[cc,0] = np.sum(G_type[:,4])/1e6 #(km2)
-#     if cc in [97,92,2,6,8,69]:
-#         data_path = '#Opt_results/'+city_name+'_hybrid_n.mat'
-#     else:
-#         data_path = '#Opt_results/'+city_name+'_hybrid.mat'
-#     Data = loadmat(data_path)
-#     R_Cap_r = Data['R_Cap_r']  #np.zeros((N_grid, 2, Y))
-#     R_Cap_f = Data['R_Cap_f']  #np.zeros((N_grid, 3, Y))
-#     R_Ele = Data['R_Ele']      #np.zeros((N_grid, Y))
-#     R_Pow_f = Data['R_Pow_f']  #np.zeros((N_grid,Y, D, T))
-#     R_Pow_r = Data['R_Pow_r']  #np.zeros((N_grid, 2, Y, D, T))
-#     R_Car = Data['R_Car']     #np.zeros((N_grid,2,Y))
-#     R_Cost = Data['R_Cost']    #np.zeros((N_grid,2,Y))
-#     R_Cost_true = Data['R_Cost_true']    #np.zeros((N_grid,2,Y))
-#     Total_Cap_total[cc,:,:] = np.sum(R_Cap_f[:,[0,2],:],axis = 0)
-#     Total_Carbon[cc,:,:] = 1e3*np.sum(R_Car[:,:,:],axis = 0)/np.sum(R_Ele[:,:],axis = 0)
-#     Total_price[cc,:,:] = np.sum(R_Cost[:,:,:],axis = 0)/np.sum(R_Ele[:,:],axis = 0)
-#     Total_price_true[cc,:,:] = np.sum(R_Cost_true[:,:,:],axis = 0)/np.sum(R_Ele[:,:],axis = 0)
-#     Total_Carbon_00[cc,:,:] = np.sum(R_Car[:,:,:],axis = 0)
-#     Total_price_00[cc,:,:] = np.sum(R_Cost[:,:,:],axis = 0)
-#     Total_price_00_true[cc,:,:] = np.sum(R_Cost_true[:,:,:],axis = 0)
-#     wall_0 = [3.18]+[2.98,2.75,2.70,2.65,2.60]
-#     win_0 = [4.80]+[4.50,4.15,4.08,4.00,3.92]
-#     K1_pri_wall = [1e3*wall_0[i] for i in range(6)]
-#     K1_pri_win  = [1e3*win_0[i] for i in range(6)]
-#     year_op = 25
-#     K3_D_fa_id = [np.zeros((len(N_gg),12,24)) for _ in range(5)]
-#     for case in range(5):
-#         Total_Ele[cc,case] = sum(Clu_days[cc,d]*np.sum(R_Pow_f[:,case,d,:],axis = (0,1)) for d in range(12))
-#         Total_Cost_total[cc,0,case] = np.sum((K1_pri_wall[case+1]*(1-WWR[:,0])+K1_pri_win[1+case]*WWR[:,0])*R_Cap_f[:,0,case])
-#         Total_Cost_total[cc,1,case] = (Total_Cost_total[cc,0,case]+sum(0.04*Total_Cost_total[cc,0,case]/(1.08)**i for i in range(1,year_op+1)))/sum(Total_Ele[cc,case]/(1.08)**i for i in range(1,year_op+1))
-#         Total_Cost_total[cc,2,case] = np.sum(K1_pri_wall[case+1]*R_Cap_r[:,1,case])
-#         Total_Ele_r = sum(Clu_days[cc,d]*np.sum(R_Pow_r[:,1,case,d,:],axis = (0,1)) for d in range(12))
-#         Total_Cost_total[cc,3,case] = (Total_Cost_total[cc,2,case]+sum(0.02*Total_Cost_total[cc,2,case]/(1.08)**i for i in range(1,year_op+1)))/sum(Total_Ele_r/(1.08)**i for i in range(1,year_op+1))
-#         P1 = path_type+str(case+2)+'/N_P_facade_ideal_'+str(case+2)+'_'+city_name+'.npy'
-#         for i in range(12):
-#             K3_D_fa_id[case][:,i,:] = (1/1e-3)*np.load(P1)[N_gg,(Clu_center[cc,i])*24:(Clu_center[cc,i]+1)*24]
-#         Total_Cost_total[cc,4,case] = np.sum((K1_pri_wall[case+1]*(1-WWR[N_gg,0])+K1_pri_win[case+1]*WWR[N_gg,0])*R_Cap_f[N_gg,2,case])
-#         Total_Ele_f = sum(Clu_days[cc,d]*np.sum(K3_D_fa_id[case][:,d,:],axis = (0,1)) for d in range(12))
-#         Total_Cost_total[cc,5,case] = (Total_Cost_total[cc,4,case]+sum(0.04*Total_Cost_total[cc,4,case]/(1.08)**i for i in range(1,year_op+1)))/sum(Total_Ele_f/(1.08)**i for i in range(1,year_op+1))
-# list_all_city_j = []
-# list_all_city_order = np.zeros((102,3))
-# list_all_city_order[:,0] = np.arange(102)
-# for i in range(4):
-#     indices = Statis_all.index[Statis_all.iloc[:,-1] == ['超大城市','特大城市','I型大城市','II型大城市'][i]]
-#     for index in indices:
-#         i_loc = Statis_all.index.get_loc(index)
-#         list_all_city_order[i_loc,2] = 4-i
-#         list_all_city_order[i_loc,1] = Total_Cap_total[i_loc,0,-1]/1e6
-# sorted_indices = np.lexsort((-list_all_city_order[:, 1], -list_all_city_order[:, 2]))
-# data_sorted = list_all_city_order[sorted_indices]
-# list_all_city_j = list(data_sorted[:,0].astype(int))
-# wall_actual = Total_Cap_total[list_all_city_j,0,:]/1e6
-# LCOE_actual = Total_Cost_total[list_all_city_j,1,:]
-# np.save('Fig_input_data/Fig3_list_city.npy',data_sorted[:,0].astype(int))
-# np.save('Fig_input_data/Fig3_wall_actual.npy',wall_actual)
-# np.save('Fig_input_data/Fig3_LCOE_actual.npy',LCOE_actual)
-
-
 
 list_all_city_j = list(np.load('Fig_input_data/Fig3_list_city.npy'))
 wall_actual = np.load('Fig_input_data/Fig3_wall_actual.npy')
 LCOE_actual = np.load('Fig_input_data/Fig3_LCOE_actual.npy')
 
-#%%
+
 cities = City_statistic.index.tolist()
 
 for name in range(len(cities)):
@@ -263,10 +187,10 @@ cb.outline.set_visible(False)
 x_centers = np.linspace(0.39, 0.71, 5)
 y_circle = 0.037
 for i, (x, color) in enumerate(zip(x_centers, colors111)):
-    circle = plt.Circle((x, y_circle), 0.01,
+    circle = plt.Circle((x, y_circle), 0.01,  # 圆心坐标和半径
                        color=color,
-                       transform=fig.transFigure,  
-                       zorder=10)
+                       transform=fig.transFigure,  # 使用画布坐标系
+                       zorder=10)  # 确保圆形在顶层
     fig.add_artist(circle)
 
 lcoe_text = ax.text(0.28, 0.037, "LCOE",

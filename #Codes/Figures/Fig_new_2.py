@@ -5,6 +5,13 @@ import numpy as np
 import matplotlib.colors as mcolors
 from matplotlib.colors import ListedColormap
 import Functions
+import matplotlib.font_manager as fm
+from matplotlib import rcParams
+font_path = 'arial.ttf'
+custom_font = fm.FontProperties(fname=font_path)
+fm.fontManager.addfont(font_path)
+rcParams['font.family'] = custom_font.get_name()
+
 ratio_plot = 3
 
 figwidth =  8.5 * ratio_plot
@@ -137,6 +144,33 @@ df_plot['facade_roof_ratio_generation'] = df_plot['facade_power'] / df_plot['roo
 df_plot = df_plot.merge(population_df, left_index=True, right_index=True)
 
 df_plot
+
+
+# #%%
+# plt.scatter(df_plot['facade_roof_ratio_area'], df_plot['facade_roof_ratio_generation'])
+# plt.plot([1,2,3],[1.0,1.0,1.0])
+# plt.text(2.52,1.7,'Urumqi')
+# plt.text(2.8,1.45,'Shenzhen')
+# plt.text(2.75,1.37,'Xiamen')
+# plt.text(2.6,1.28,'Xining')
+# plt.text(2.00,1.25,'Shanghai')
+# plt.xlabel('Facade to Roof Area Ratio')
+# plt.ylabel('Facade to Roof Generation Ratio')
+# plt.show()
+
+# plt.scatter(df_plot['average_building_height'], df_plot['facade_roof_ratio_generation'])
+# plt.plot(np.arange(5,16),np.ones(11))
+# plt.text(13,1.7,'Urumqi')
+# plt.text(13.7,1.45,'Shenzhen')
+# plt.text(13.5,1.37,'Xiamen')
+# plt.text(11.8,1.28,'Xining')
+# plt.text(12,1.2,'Shanghai')
+# plt.xlabel('Average Building Height (m)')
+# plt.ylabel('Facade to Roof Generation Ratio')
+# plt.show()
+
+
+print(df_plot.sort_values(by='facade_roof_ratio_generation', ascending=False).iloc[:5,:])
 
 
 #%%import numpy as np
@@ -306,6 +340,12 @@ for i_ax, df_part in enumerate(parts):
                 edgecolor='none'           # Remove border
             )
         )
+    if i_ax == 0:
+        ax.text(-15.6, -3.0,
+            'a',
+            ha='center', va='center',
+            fontsize=fs+9,
+            fontweight='bold')
 
     # -------------- Plot Ratio Scatter on the Same Subplot with ax.twiny() --------------
     # Create a new x-axis with a shared y-axis
@@ -350,9 +390,7 @@ frame.set_facecolor('none')
 
 # ----------------- Adjust Layout and Save -----------------
 # Adjust subplot layout
-plt.subplots_adjust(left=0.10, right=0.98, bottom=0.1, top=0.95,
-		wspace=0.4, hspace=0
-        )
+plt.subplots_adjust(left=0.10, right=0.98, bottom=0.1, top=0.95,wspace=0.4, hspace=0)
 
 fig.savefig('Figs_new/Fig2a.pdf',format='pdf',dpi=600,bbox_inches='tight')
 fig.savefig("Figs_new/Fig2a.png", dpi=600,bbox_inches='tight')
@@ -392,14 +430,33 @@ model.fit(x, y)
 k = model.coef_[0]
 R2 = model.score(x, y)
 
+import statsmodels.api as sm
+sm_X = sm.add_constant(x)
+sm_model = sm.OLS(y, sm_X).fit()
+sm_k = sm_model.params[1]
+sm_p_value = sm_model.pvalues[1]
+sm_R2 = sm_model.rsquared
+
+print(f"斜率 k = {sm_k:.4f}, p 值 = {sm_p_value:.10f}, R² = {sm_R2:.4f}")
+
+
 x_fit = np.linspace(x.min(), x.max(), 100)
 y_fit = k * x_fit
 ax.plot(x_fit, y_fit, '-', color=color_fit1[-1], linewidth=lw2, 
         label=f'$y={k:.2f}x$')  #  R²={R2:.2f}
 ax.text(
-    0.4, 0.64,           # Position near the end of the fitted line
-    f'$R^2={R2:.2f}$',  # Annotation text
+    0.3, 0.64,
+    f'$y={k:.2f}x$',
     fontsize=fs - 6,
+    color='red',
+    transform=ax.transAxes,
+    ha='right', va='bottom',
+)
+#f'$R^2={R2:.2f}$',  # Annotation text
+ax.text(
+    0.27, 0.58,           # Position near the end of the fitted line
+    '(p<0.05)',  # Annotation text
+    fontsize=fs - 9,
     color='red',
     transform=ax.transAxes,
     ha='right', va='bottom',
@@ -410,37 +467,51 @@ ax.set_xlim(0, 2000)
 ax.set_ylim(0, 2500)
 ax.set_xlabel('Roof', fontsize=fs-0)
 ax.set_ylabel('Facade', fontsize=fs-0)
-ax.set_title("Area (km$^2$)", fontsize=fs-5, y=0.88, fontweight='bold')
+ax.set_title("Area (km$^2$)", fontsize=fs-5, y=1, fontweight='bold')
 # Add y = x reference line
 x_limits = ax.get_xlim()
 x_line = np.linspace(x_limits[0], x_limits[1], 100)
 ax.plot(x_line, x_line, linestyle='-', color='gray', linewidth=lw, label='$y=x$')
+ax.text(
+    0.94, 0.54,
+    f'$y=x$',
+    fontsize=fs - 6,
+    color='gray',
+    transform=ax.transAxes,
+    ha='right', va='bottom',
+)
 
 # Add grid and legend
 ax.grid(alpha=0.5)
 
-lg = ax.legend(loc='lower right', fontsize=fs - 6)
-frame = lg.get_frame()
-frame.set_linewidth(0.6)
-frame.set_edgecolor('black')
-frame.set_facecolor('none')
+# lg = ax.legend(loc='lower right', fontsize=fs - 6)
+# frame = lg.get_frame()
+# frame.set_linewidth(0.6)
+# frame.set_edgecolor('black')
+# frame.set_facecolor('none')
 
 # Add colorbar to display the third variable (average building height)
 cbar = plt.colorbar(sc, ax=ax)
-#cbar.set_label('Urban population (Million)', fontsize=fs - 5)
+cbar.set_label('Urban population (Million)', fontsize=fs - 5)
 cbar.set_ticks([1,3,5,10])  # 5 evenly spaced ticks, adjust if needed
 cbar.ax.tick_params(labelsize=fs - 5)
-for tt in range(4):
-    labelsss = ['SLC','VLC','LC-I','LC-II']
-    labelyyy = [0.98,0.7,0.35,0.15]
-    cbar.ax.text(4.5,
-                labelyyy[tt],
-                labelsss[tt],
-                ha='center', va='center',
-                rotation=90,
-                fontsize=fs - 5,
-                color='black',
-                transform=cbar.ax.transAxes)
+# for tt in range(4):
+#     labelsss = ['SLC','VLC','LC-I','LC-II']
+#     labelyyy = [0.98,0.7,0.35,0.15]
+#     cbar.ax.text(4.5,
+#                 labelyyy[tt],
+#                 labelsss[tt],
+#                 ha='center', va='center',
+#                 rotation=90,
+#                 fontsize=fs - 5,
+#                 color='black',
+#                 transform=cbar.ax.transAxes)
+ax.text(
+    -500, 2700,
+    'b',
+    fontsize=fs + 15,
+    fontweight='bold'
+)
 
 # Adjust layout
 plt.subplots_adjust(left=0.19, right=0.96, bottom=0.18, top=0.96)
@@ -489,14 +560,31 @@ model.fit(x, y)
 k = model.coef_[0]
 R2 = model.score(x, y)
 
+import statsmodels.api as sm
+sm_X = sm.add_constant(x)
+sm_model = sm.OLS(y, sm_X).fit()
+sm_k = sm_model.params[1]
+sm_p_value = sm_model.pvalues[1]
+sm_R2 = sm_model.rsquared
+
+print(f"斜率 k = {sm_k:.4f}, p 值 = {sm_p_value:.10f}, R² = {sm_R2:.4f}")
+
 x_fit = np.linspace(x.min(), x.max(), 100)
 y_fit = k * x_fit
 ax.plot(x_fit, y_fit, '-', color=color_fit2, linewidth=lw2, 
         label=f'$y={k[0]:.2f}x$')  #  R²={R2:.2f}
 ax.text(
-    0.95, 0.5,           # Position near the end of the fitted line
-    f'$R^2={R2:.2f}$',  # Annotation text
+    0.92, 0.5,
+    f'$y={k[0]:.2f}x$',
     fontsize=fs - 6,
+    color='red',
+    transform=ax.transAxes,
+    ha='right', va='bottom',
+)
+ax.text(
+    0.89, 0.45,
+    '(p<0.05)',
+    fontsize=fs - 9,
     color='red',
     transform=ax.transAxes,
     ha='right', va='bottom',
@@ -507,7 +595,7 @@ ax.set_xlim(0,600)
 ax.set_ylim(0, 500)
 ax.set_xlabel('Roof', fontsize=fs-0)
 ax.set_ylabel('Facade', fontsize=fs-0)
-ax.set_title("Annual solar radiation\n(TWh)", fontsize=fs-5, y=0.8, fontweight='bold')
+ax.set_title("Annual solar radiation (TWh)", fontsize=fs-5, y=1, fontweight='bold')
 # Add y = x reference line
 x_limits = ax.get_xlim()
 x_line = np.linspace(x_limits[0], x_limits[1], 100)
@@ -515,31 +603,43 @@ ax.plot(x_line, x_line, linestyle='-', color='gray', linewidth=lw, label='$y=x$'
 ax.set_xticks(np.arange(0, 601, 100))
 # Add grid and legend
 ax.grid(alpha=0.5)
-
-lg = ax.legend(loc='lower right', fontsize=fs - 6)
-frame = lg.get_frame()
-frame.set_linewidth(0.6)
-frame.set_edgecolor('black')
-frame.set_facecolor('none')
+ax.text(
+    0.76, 0.9,
+    f'$y=x$',
+    fontsize=fs - 6,
+    color='gray',
+    transform=ax.transAxes,
+    ha='right', va='bottom',
+)
+# lg = ax.legend(loc='lower right', fontsize=fs - 6)
+# frame = lg.get_frame()
+# frame.set_linewidth(0.6)
+# frame.set_edgecolor('black')
+# frame.set_facecolor('none')
 
 
 # Add colorbar to display the third variable (average building height)
 cbar = plt.colorbar(sc, ax=ax)
-#cbar.set_label('Urban population (Million)', fontsize=fs - 5)
+cbar.set_label('Urban population (Million)', fontsize=fs - 5)
 cbar.set_ticks([1,3,5,10])  # 5 evenly spaced ticks, adjust if needed
 cbar.ax.tick_params(labelsize=fs - 5)
-for tt in range(4):
-    labelsss = ['SLC','VLC','LC-I','LC-II']
-    labelyyy = [0.98,0.7,0.35,0.15]
-    cbar.ax.text(4.5,
-                labelyyy[tt],
-                labelsss[tt],
-                ha='center', va='center',
-                rotation=90,
-                fontsize=fs - 5,
-                color='black',
-                transform=cbar.ax.transAxes)
-
+# for tt in range(4):
+#     labelsss = ['SLC','VLC','LC-I','LC-II']
+#     labelyyy = [0.98,0.7,0.35,0.15]
+#     cbar.ax.text(4.5,
+#                 labelyyy[tt],
+#                 labelsss[tt],
+#                 ha='center', va='center',
+#                 rotation=90,
+#                 fontsize=fs - 5,
+#                 color='black',
+#                 transform=cbar.ax.transAxes)
+ax.text(
+    -150, 540,
+    'c',
+    fontsize=fs + 15,
+    fontweight='bold'
+)
 
 # Adjust layout
 plt.subplots_adjust(left=0.19, right=0.96, bottom=0.18, top=0.96)
